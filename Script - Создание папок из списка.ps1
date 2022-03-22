@@ -18,9 +18,9 @@ $D_E1 = $D_E[$i].replace(";","")
 [System.IO.Directory]::CreateDirectory("C:\Users\radmin\Desktop\csv\papki\$A1\$B_C1\$D_E1\Иные существенные факторы")
 [System.IO.Directory]::CreateDirectory("C:\Users\radmin\Desktop\csv\papki\$A1\$B_C1\$D_E1\Направление ссуды")
 [System.IO.Directory]::CreateDirectory("C:\Users\radmin\Desktop\csv\papki\$A1\$B_C1\$D_E1\Обеспечение")
-[System.IO.Directory]::CreateDirectory("C:\Users\radmin\Desktop\csv\papki\$A1\$B_C1\$D_E1\Оценка ссуды банком")
+[System.IO.Directory]::CreateDirectory("C:\Users\radmin\Desktop\csv\papki\$A1\$B_C1\$D_E1\Оценка")
 [System.IO.Directory]::CreateDirectory("C:\Users\radmin\Desktop\csv\papki\$A1\$B_C1\$D_E1\Прочие документы")
-[System.IO.Directory]::CreateDirectory("C:\Users\radmin\Desktop\csv\papki\$A1\$B_C1\$D_E1\Решения Банка по №590-П")
+[System.IO.Directory]::CreateDirectory("C:\Users\radmin\Desktop\csv\papki\$A1\$B_C1\$D_E1\Решения")
 [System.IO.Directory]::CreateDirectory("C:\Users\radmin\Desktop\csv\papki\$A1\$B_C1\$D_E1\Финансовое состояние")
 $i++
 }
