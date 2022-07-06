@@ -1,0 +1,90 @@
+$head = "Компьютер;Outlook 2007;Outlook 2010;Outlook 2013(2015);Outlook 2016" | out-file \\net-disk\fs-root\Public\PS\outlook.csv -Encoding utf8 # Заголовок итогового csv-файла
+$head = "Компьютер;Пинг;" | out-file \\net-disk\fs-root\Public\PS\outlook_offline.csv -Encoding utf8 # Заголовок csv-файла с АРМами, к которым нет пинга
+
+$users = Get-ADuser -filter 'enabled -eq "true"' -SearchBase "OU NAME" -Properties description | select description -ExpandProperty description
+$total_amount = $users.Count # Общее число АРМов в заданном диапазон
+write-host "Общее кол-во компьютеров для проверки $total_amount"
+$current_step = 0
+foreach ($user in $users) # Цикл проверки АРМов из диапазона
+{
+$compname = $user -replace ".*: "
+$current_step++
+if(($compname -match 'VDI') -xor ($compname -match 'crm') -xor ($compname -match 'n-vdi')) # Отсекаем виртуалки
+{
+write-host "Пропускаем виртуалку ($current_step/$total_amount)"
+}
+else
+{
+IF (Test-Connection -BufferSize 32 -Count 1 -ComputerName $compname -Quiet)
+{
+
+
+   # Блок проверки наличия установленной версии 2007
+    if(test-path -Path "\\$compname\c$\Program Files\Microsoft Office\Office12\outlook.exe")
+    {
+    $outlookversion12 = (Get-item "\\$compname\c$\Program Files\Microsoft Office\Office12\outlook.exe").VersionInfo.productversion
+    }
+    elseif(test-path -Path "\\$compname\c$\Program Files\Microsoft Office (x86)\Office12\outlook.exe")
+    {
+    $outlookversion12 = (Get-item "\\$compname\c$\Program Files (x86)\Microsoft Office\Office12\outlook.exe").VersionInfo.productversion
+    }
+    else
+    {
+    $outlookversion12 = "Нет"
+    }
+
+    # Блок проверки наличия установленной версии 2010
+    if(test-path -Path "\\$compname\c$\Program Files\Microsoft Office\Office14\outlook.exe")
+    {
+    $outlookversion14 = (Get-item "\\$compname\c$\Program Files\Microsoft Office\Office14\outlook.exe").VersionInfo.productversion
+    }
+    elseif(test-path -Path "\\$compname\c$\Program Files\Microsoft Office (x86)\Office14\outlook.exe")
+    {
+    $outlookversion14 = (Get-item "\\$compname\c$\Program Files (x86)\Microsoft Office\Office14\outlook.exe").VersionInfo.productversion
+    }
+    else
+    {
+    $outlookversion14 = "Нет"
+    }
+    # Блок проверки наличия установленной версии 2013
+    if(test-path -Path "\\$compname\c$\Program Files\Microsoft Office\Office15\outlook.exe")
+    {
+    $outlookversion15 = (Get-item "\\$compname\c$\Program Files\Microsoft Office\Office15\outlook.exe").VersionInfo.productversion
+    }
+    elseif(test-path -Path "\\$compname\c$\Program Files\Microsoft Office (x86)\Office15\outlook.exe")
+    {
+    $outlookversion15 = (Get-item "\\$compname\c$\Program Files (x86)\Microsoft Office\Office15\outlook.exe").VersionInfo.productversion
+    }
+    else
+    {
+    $outlookversion15 = "Нет"
+    }
+    # Блок проверки наличия установленной версии 2016
+    if(test-path -Path "\\$compname\c$\Program Files\Microsoft Office\Office16\outlook.exe")
+    {
+    $outlookversion16 = (Get-item "\\$compname\c$\Program Files\Microsoft Office\Office16\outlook.exe").VersionInfo.productversion
+    }
+    elseif(test-path -Path "\\$compname\c$\Program Files\Microsoft Office (x86)\Office16\outlook.exe")
+    {
+    $outlookversion16 = (Get-item "\\$compname\c$\Program Files (x86)\Microsoft Office\Office16\outlook.exe").VersionInfo.productversion
+    }
+    else
+    {
+    $outlookversion16 = "Нет"
+    }
+
+write-host "$compname - проверен ($current_step/$total_amount)"
+
+
+# Блок вывода информации в csv
+
+$compname + ";" + $outlookversion12 + ";" + $outlookversion14 + ";" + $outlookversion15 + ";" + $outlookversion16 | out-file \\net-disk\fs-root\Public\PS\outlook.csv -Encoding utf8 -Append
+}
+else
+{
+$compname + ";" + "Нет пинга" | out-file \\net-disk\fs-root\Public\PS\outlook_offline.csv  -Encoding utf8 -Append
+write-host "$compname - нет пинга ($current_step/$total_amount)"
+}
+}
+}
+# 
