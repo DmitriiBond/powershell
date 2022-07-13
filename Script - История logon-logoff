@@ -1,0 +1,56 @@
+$days = 10
+$username = "username"
+
+Write-Host Retrieving last $days days of user: $username, logon/logoff activity... please wait
+
+$events = @()
+$events += Get-WinEvent -FilterHashtable @{
+    LogName='Security'
+    Id=@(4624,4800,4634)
+    StartTime=(Get-Date).AddDays(-$days)
+}
+
+$type_lu = @{
+    4624 = 'Logon'
+    4800 = 'Logoff' # screensaver lock
+    4634 = 'Logoff' # explicit
+}
+
+$ns = @{'ns'='http://schemas.microsoft.com/win/2004/08/events/event'}
+$target_xpath = "//ns:Data[@Name='TargetUserName']"
+$usersid_xpath = "//ns:Data[@Name='UserSid']"
+
+If($events) {
+    $results = ForEach($event in $events) {
+        $xml = $event.ToXml()
+        Switch -Regex ($event.Id) {
+            '4...' {
+                $user = (
+                    Select-Xml -Content $xml -Namespace $ns -XPath $target_xpath
+                ).Node.'#text'
+                Break
+            }
+            '7...' {
+                $sid = (
+                    Select-Xml -Content $xml -Namespace $ns -XPath $usersid_xpath
+                ).Node.'#text'
+                $user = (
+                    New-Object -TypeName 'System.Security.Principal.SecurityIdentifier' -ArgumentList $sid
+                ).Translate([System.Security.Principal.NTAccount]).Value
+                Break
+            }
+        }
+        if($username -eq $user) {
+            New-Object -TypeName PSObject -Property @{
+                Time = $event.TimeCreated
+                Id = $event.Id
+                Type = $type_lu[$event.Id]
+                User = $user
+            }
+        }
+    }
+
+    If($results) {
+        $results
+    }
+}
